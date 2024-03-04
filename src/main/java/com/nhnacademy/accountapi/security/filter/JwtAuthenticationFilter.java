@@ -49,6 +49,7 @@ public class JwtAuthenticationFilter  extends UsernamePasswordAuthenticationFilt
         }
 
         log.debug("JwtAuthenticationFilter : {}", loginRequest);
+        log.info("JwtAuthenticationFilter : {}", loginRequest);
         //TODO3-usernamePasswordAuthenticationToken객체를 생성하고 authenticationManager에게 parameter로 전달 후 회원이 있는지 검증합니다.
         UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken = new UsernamePasswordAuthenticationToken(loginRequest.getId(),loginRequest.getPassword());
         Authentication authentication = authenticationManager.authenticate(usernamePasswordAuthenticationToken);
@@ -76,7 +77,7 @@ public class JwtAuthenticationFilter  extends UsernamePasswordAuthenticationFilt
         TokenResponse tokenResponse = new TokenResponse(jwtToken, jwtProperties.getTokenPrefix(), jwtProperties.getExpirationTime());
         ObjectMapper objectMapper = new ObjectMapper();
         String result = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(tokenResponse);
-
+        log.info("result : {}",result);
         PrintWriter printWriter = response.getWriter();
         printWriter.write(result);
         printWriter.close();

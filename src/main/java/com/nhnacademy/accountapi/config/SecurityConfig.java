@@ -68,7 +68,7 @@ public class SecurityConfig {
         //passwordEncoder는 설계한 회원 Table의 password 알고리즘을 고려하여 설정하세요.
 
         DaoAuthenticationProvider daoAuthenticationProvider = new DaoAuthenticationProvider();
-        daoAuthenticationProvider.setPasswordEncoder(passwordEncoder());
+        daoAuthenticationProvider.setPasswordEncoder(/*passwordEncoder()*/NoOpPasswordEncoder.getInstance());
         daoAuthenticationProvider.setUserDetailsService(customUserDetailsService());
         return daoAuthenticationProvider;
     }

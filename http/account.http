@@ -1,0 +1,22 @@
+### 로그인  success
+
+POST http://localhost:8100/api/account/login
+
+{
+    "id":"nhnacademy",
+    "password":"nhnacademy12345*"
+}
+
+
+### 로그인 fail - 401
+
+POST http://localhost:8100/api/account/login
+
+{
+    "id":"nhnacademy",
+    "password":"nhnacademy-password"
+}
+
+### 회원조회
+GET http://localhost:8100/api/account/users
+X-USER-ID:nhnacademy

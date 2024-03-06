@@ -19,7 +19,8 @@ public class CustomUserDetailsService implements UserDetailsService {
         //여러분의 쇼핑몰 구조에 맞게 데이터 베이스에서 조회하는 로직을 추가하세요.
         //또는 RestTemplate를 이용해서 shoppingmall-api 서버로 회원정보를 호출해서 PrincipalDetails 객체를 생성할 수도 있습니다.
         
-        User user = User.createUser("nhnacademy","엔에이치엔아카데미","nhnacademy12345*");
+//        User user = User.createUser("nhnacademy","엔에이치엔아카데미","nhnacademy12345*");
+        User user = User.createUser("admin","엔에이치엔아카데미","123");
         return new PrincipalDetails(user);
     }
 

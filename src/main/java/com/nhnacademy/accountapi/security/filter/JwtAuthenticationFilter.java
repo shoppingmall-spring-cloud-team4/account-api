@@ -5,6 +5,8 @@ import com.nhnacademy.accountapi.dto.LoginRequest;
 import com.nhnacademy.accountapi.dto.TokenResponse;
 import com.nhnacademy.accountapi.properties.JwtProperties;
 import com.nhnacademy.accountapi.security.details.PrincipalDetails;
+import com.nhnacademy.accountapi.util.JwtUtil;
+import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import lombok.extern.slf4j.Slf4j;
@@ -16,24 +18,33 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
+import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.time.Duration;
 import java.util.Calendar;
 import java.util.Date;
+
+import static com.nhnacademy.accountapi.util.JwtUtil.*;
 
 @Slf4j
 public class JwtAuthenticationFilter  extends UsernamePasswordAuthenticationFilter  {
     private final AuthenticationManager authenticationManager;
     private final JwtProperties jwtProperties;
     private final ObjectMapper objectMapper;
+    private final JwtUtil jwtUtil;
 
-    public JwtAuthenticationFilter(AuthenticationManager authenticationManager, JwtProperties jwtProperties, ObjectMapper objectMapper) {
+    public JwtAuthenticationFilter(AuthenticationManager authenticationManager,
+                                   JwtProperties jwtProperties,
+                                   ObjectMapper objectMapper,
+                                   JwtUtil jwtUtil) {
         super(authenticationManager);
         this.authenticationManager=authenticationManager;
         this.jwtProperties = jwtProperties;
         this.objectMapper = objectMapper;
+        this.jwtUtil = jwtUtil;
         //TODO#2-login url은 /login으로 설정합니다. 변경은 jwtProperties를 참고 하세요.
         setFilterProcessesUrl(jwtProperties.getLoginUrl());
     }
@@ -62,25 +73,17 @@ public class JwtAuthenticationFilter  extends UsernamePasswordAuthenticationFilt
         //TODO#5 인증이 성공 하면 JWT 를 발급 합니다.
         //발급된 jwt 는 base64로 encoding 됩니다.
 
-
         PrincipalDetails principalDetails = (PrincipalDetails) authResult.getPrincipal();
-        Calendar calendar = Calendar.getInstance();
-        calendar.add(Calendar.SECOND, jwtProperties.getExpirationTime() );
 
-        String jwtToken = Jwts.builder()
-                .claim("userId", principalDetails.getUsername())
-                .setIssuedAt(new Date())
-                .setExpiration(calendar.getTime())
-                .signWith(SignatureAlgorithm.HS256, jwtProperties.getSecret())
-                .compact();
+        String accessToken = jwtUtil.createAccessToken(principalDetails.getUsername(), principalDetails.getAuthorities());
+        String refreshToken = jwtUtil.createRefreshToken(principalDetails.getUsername(), principalDetails.getAuthorities());
 
-        TokenResponse tokenResponse = new TokenResponse(jwtToken, jwtProperties.getTokenPrefix(), jwtProperties.getExpirationTime());
+        TokenResponse tokenResponse = new TokenResponse(accessToken,refreshToken, jwtProperties.getTokenPrefix(), jwtProperties.getExpirationTime());
         ObjectMapper objectMapper = new ObjectMapper();
         String result = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(tokenResponse);
-        log.info("result : {}",result);
-        PrintWriter printWriter = response.getWriter();
-        printWriter.write(result);
-        printWriter.close();
+        response.addHeader(AUTH_HEADER,TOKEN_TYPE + accessToken);
+        response.addHeader(EXP_HEADER,String.valueOf(new Date().getTime()+TEST));
 
     }
+
 }

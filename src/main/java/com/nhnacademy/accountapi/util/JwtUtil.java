@@ -54,7 +54,8 @@ public class JwtUtil {
 
     public String createRefreshToken(String userId,
                                      Collection<? extends GrantedAuthority> authorities) {
-        return createToken(userId, authorities, REFRESH_TOKEN, REFRESH_TOKEN_VALID_TIME);
+//        return createToken(userId, authorities, REFRESH_TOKEN, REFRESH_TOKEN_VALID_TIME);
+        return createToken(userId, authorities, REFRESH_TOKEN, TEST);
     }
 
     public boolean isValidateToken(String token) {

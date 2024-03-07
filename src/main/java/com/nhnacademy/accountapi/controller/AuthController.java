@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -24,6 +25,11 @@ public class AuthController {
     @PostMapping("/refresh")
     public ResponseEntity<Void> refreshToken(@RequestHeader(name = HttpHeaders.AUTHORIZATION,required = false) String accessToken, HttpServletResponse response) {
         String refreshToken = jwtUtil.getRefreshToken(accessToken);
+        if (!jwtUtil.isValidateToken(refreshToken)) {
+            return ResponseEntity
+                    .status(HttpStatus.UNAUTHORIZED)
+                    .build();
+        }
         Claims claims = jwtUtil.parseClaims(refreshToken);
         String reissueToken = jwtUtil.reCreationAccessToken(claims);
         sessionRedisTemplate.opsForHash().put(REFRESH_TOKEN,reissueToken,refreshToken);

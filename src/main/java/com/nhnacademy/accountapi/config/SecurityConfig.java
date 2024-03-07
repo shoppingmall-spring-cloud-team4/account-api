@@ -10,6 +10,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
@@ -28,6 +29,7 @@ public class SecurityConfig {
     private final JwtProperties jwtProperties;
     private final ObjectMapper objectMapper;
     private final JwtUtil jwtUtil;
+    private final RedisTemplate<String, Object> sessionRedisTemplate;
     @Bean
     @Order(Ordered.HIGHEST_PRECEDENCE)
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -37,7 +39,7 @@ public class SecurityConfig {
             .formLogin().disable()
             .httpBasic().disable()
                 //TODO#1-1 - UsernamePasswordAuthenticationFilter를 Custom한 JwtAuthenticationFilter 교체.
-            .addFilterAt(new JwtAuthenticationFilter(authenticationManager(null),jwtProperties,objectMapper,jwtUtil),UsernamePasswordAuthenticationFilter.class)
+            .addFilterAt(new JwtAuthenticationFilter(authenticationManager(null),jwtProperties,objectMapper,jwtUtil,sessionRedisTemplate),UsernamePasswordAuthenticationFilter.class)
             .authorizeRequests()
             .antMatchers("/api/users/**")
             .permitAll()

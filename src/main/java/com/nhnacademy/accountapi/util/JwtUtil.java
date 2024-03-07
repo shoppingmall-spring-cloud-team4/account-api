@@ -5,6 +5,7 @@ import com.nhnacademy.accountapi.properties.JwtProperties;
 import io.jsonwebtoken.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Component;
 
@@ -25,6 +26,7 @@ public class JwtUtil {
     public static final String EXP_HEADER = "X-Expire";
     public static final String TOKEN_TYPE = "Bearer ";
     private final JwtProperties jwtProperties;
+    private final RedisTemplate<String, Object> sessionRedisTemplate;
 
     private String createToken(String userId,
                                Collection<? extends GrantedAuthority> authorities,
@@ -57,7 +59,7 @@ public class JwtUtil {
 
     public boolean isValidateToken(String token) {
         try {
-            Jwts.parser().setSigningKey(jwtProperties.getSecret().getBytes()).parseClaimsJws(token);
+            Jwts.parser().setSigningKey(jwtProperties.getSecret()).parseClaimsJws(token);
             return true;
         } catch (SignatureException | MalformedJwtException e) {
             log.error("잘못된 JWT 서명입니다.");
@@ -76,8 +78,18 @@ public class JwtUtil {
         return Jwts.builder()
                 .setClaims(claims)
                 .setIssuedAt(now)
-                .setExpiration(new Date(now.getTime() + ACCESS_TOKEN_VALID_TIME))
+                .setExpiration(new Date(now.getTime() + TEST))
                 .signWith(SignatureAlgorithm.HS256, jwtProperties.getSecret())
                 .compact();
+    }
+
+    public Claims parseClaims(String token) {
+        return Jwts.parserBuilder().setSigningKey(jwtProperties.getSecret()).build().parseClaimsJws(token).getBody();
+    }
+
+    public String getRefreshToken(String accessToken) {
+        String refreshToken = (String) sessionRedisTemplate.opsForHash().get(REFRESH_TOKEN, accessToken);
+        sessionRedisTemplate.opsForHash().delete(REFRESH_TOKEN, accessToken);
+        return refreshToken;
     }
 }

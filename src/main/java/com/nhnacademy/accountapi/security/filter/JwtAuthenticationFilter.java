@@ -10,6 +10,7 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -35,16 +36,19 @@ public class JwtAuthenticationFilter  extends UsernamePasswordAuthenticationFilt
     private final JwtProperties jwtProperties;
     private final ObjectMapper objectMapper;
     private final JwtUtil jwtUtil;
+    private final RedisTemplate<String, Object> sessionRedisTemplate;
 
     public JwtAuthenticationFilter(AuthenticationManager authenticationManager,
                                    JwtProperties jwtProperties,
                                    ObjectMapper objectMapper,
-                                   JwtUtil jwtUtil) {
+                                   JwtUtil jwtUtil,
+                                   RedisTemplate<String, Object> sessionRedisTemplate) {
         super(authenticationManager);
         this.authenticationManager=authenticationManager;
         this.jwtProperties = jwtProperties;
         this.objectMapper = objectMapper;
         this.jwtUtil = jwtUtil;
+        this.sessionRedisTemplate = sessionRedisTemplate;
         //TODO#2-login url은 /login으로 설정합니다. 변경은 jwtProperties를 참고 하세요.
         setFilterProcessesUrl(jwtProperties.getLoginUrl());
     }
@@ -77,6 +81,8 @@ public class JwtAuthenticationFilter  extends UsernamePasswordAuthenticationFilt
 
         String accessToken = jwtUtil.createAccessToken(principalDetails.getUsername(), principalDetails.getAuthorities());
         String refreshToken = jwtUtil.createRefreshToken(principalDetails.getUsername(), principalDetails.getAuthorities());
+
+        sessionRedisTemplate.opsForHash().put(REFRESH_TOKEN,accessToken,refreshToken);
 
         TokenResponse tokenResponse = new TokenResponse(accessToken,refreshToken, jwtProperties.getTokenPrefix(), jwtProperties.getExpirationTime());
         ObjectMapper objectMapper = new ObjectMapper();

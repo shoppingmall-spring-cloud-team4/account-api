@@ -38,7 +38,7 @@ public class SecurityConfig {
             .and()
             .formLogin().disable()
             .httpBasic().disable()
-            .addFilterAt(new JwtAuthenticationFilter(authenticationManager(null),jwtProperties,objectMapper,jwtUtil,sessionRedisTemplate),UsernamePasswordAuthenticationFilter.class)
+            .addFilterAt(new JwtAuthenticationFilter(authenticationManager(null),authenticationProvider(null),jwtProperties,objectMapper,jwtUtil,sessionRedisTemplate),UsernamePasswordAuthenticationFilter.class)
             .authorizeRequests()
             .antMatchers("/api/users/**")
             .permitAll()
@@ -56,19 +56,13 @@ public class SecurityConfig {
         return authenticationConfiguration.getAuthenticationManager();
     }
 
-    @Bean
-    public CustomUserDetailsService customUserDetailsService() {
-
-        return new CustomUserDetailsService();
-    }
 
     @Bean
-    public DaoAuthenticationProvider authenticationProvider(){
-
+    public DaoAuthenticationProvider authenticationProvider(CustomUserDetailsService customUserDetailsService){
 
         DaoAuthenticationProvider daoAuthenticationProvider = new DaoAuthenticationProvider();
         daoAuthenticationProvider.setPasswordEncoder(/*passwordEncoder()*/NoOpPasswordEncoder.getInstance());
-        daoAuthenticationProvider.setUserDetailsService(customUserDetailsService());
+        daoAuthenticationProvider.setUserDetailsService(customUserDetailsService);
         return daoAuthenticationProvider;
     }
 }

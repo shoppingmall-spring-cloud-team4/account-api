@@ -1,7 +1,9 @@
 package com.nhnacademy.accountapi.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.Getter;
 
+@Getter
 public class UserResponse {
 
     @JsonProperty("id")

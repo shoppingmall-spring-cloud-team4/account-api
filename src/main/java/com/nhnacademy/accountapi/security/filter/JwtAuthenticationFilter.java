@@ -13,6 +13,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
@@ -37,18 +38,22 @@ public class JwtAuthenticationFilter  extends UsernamePasswordAuthenticationFilt
     private final ObjectMapper objectMapper;
     private final JwtUtil jwtUtil;
     private final RedisTemplate<String, Object> sessionRedisTemplate;
+    private final DaoAuthenticationProvider provider;
 
     public JwtAuthenticationFilter(AuthenticationManager authenticationManager,
+                                   DaoAuthenticationProvider provider,
                                    JwtProperties jwtProperties,
                                    ObjectMapper objectMapper,
                                    JwtUtil jwtUtil,
                                    RedisTemplate<String, Object> sessionRedisTemplate) {
         super(authenticationManager);
         this.authenticationManager=authenticationManager;
+        this.provider = provider;
         this.jwtProperties = jwtProperties;
         this.objectMapper = objectMapper;
         this.jwtUtil = jwtUtil;
         this.sessionRedisTemplate = sessionRedisTemplate;
+
         //TODO#2-login url은 /login으로 설정합니다. 변경은 jwtProperties를 참고 하세요.
         setFilterProcessesUrl(jwtProperties.getLoginUrl());
     }
@@ -67,9 +72,7 @@ public class JwtAuthenticationFilter  extends UsernamePasswordAuthenticationFilt
         log.info("JwtAuthenticationFilter : {}", loginRequest);
         //TODO3-usernamePasswordAuthenticationToken객체를 생성하고 authenticationManager에게 parameter로 전달 후 회원이 있는지 검증합니다.
         UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken = new UsernamePasswordAuthenticationToken(loginRequest.getId(),loginRequest.getPassword());
-        Authentication authentication = authenticationManager.authenticate(usernamePasswordAuthenticationToken);
-
-        return authentication;
+        return provider.authenticate(usernamePasswordAuthenticationToken);
     }
 
     @Override
